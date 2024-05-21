@@ -1,0 +1,47 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    display: block;
+}
+
+th, td {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+th {
+    background-color: #f2f2f2;
+    cursor: pointer;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+th:hover {
+    background-color: #ddd;
+}
+
+th.sort-asc::after {
+    content: ' \25B2'; /* Up arrow */
+}
+
+th.sort-desc::after {
+    content: ' \25BC'; /* Down arrow */
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+@media (max-width: 600px) {
+    th, td {
+        padding: 12px 8px;
+    }
+}

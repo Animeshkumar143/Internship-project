@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Main Table with Job Data and Analytics</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+<h2>Main Table</h2>
+<table id="mainTable">
+    <thead>
+        <tr>
+            <th onclick="sortTable(0)">Year</th>
+            <th onclick="sortTable(1)">Number of Total Jobs</th>
+            <th onclick="sortTable(2)">Average Salary in USD</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Table content will be dynamically inserted here -->
+    </tbody>
+</table>
+
+<h2>Job Titles by Year</h2>
+<table id="jobTitlesTable" style="display:none;">
+    <thead>
+        <tr>
+            <th>Job Title</th>
+            <th>Number of Jobs</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Job titles data will be dynamically inserted here -->
+    </tbody>
+</table>
+
+<canvas id="jobsLineGraph" width="400" height="200"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/api/data')
+            .then(response => response.json())
+            .then(data => {
+                const { yearly_data, job_titles } = data;
+                const tableBody = document.querySelector('#mainTable tbody');
+
+                yearly_data.forEach(item => {
+                    const row = tableBody.insertRow();
+                    row.insertCell().textContent = item.Year;
+                    row.insertCell().textContent = item.total_jobs;
+                    row.insertCell().textContent = item.average_salary.toFixed(2);
+
+                    row.addEventListener('click', () => displayJobTitles(item.Year));
+                });
+
+                function displayJobTitles(year) {
+                    const jobTitlesTable = document.getElementById('jobTitlesTable');
+                    const jobTitlesBody = jobTitlesTable.querySelector('tbody');
+                    jobTitlesBody.innerHTML = '';
+
+                    const titles = job_titles[year];
+                    for (const [jobTitle, numberOfJobs] of Object.entries(titles)) {
+                        const row = jobTitlesBody.insertRow();
+                        row.insertCell().textContent = jobTitle;
+                        row.insertCell().textContent = numberOfJobs;
+                    }
+
+                    jobTitlesTable.style.display = 'block';
+                }
+
+                const ctx = document.getElementById('jobsLineGraph').getContext('2d');
+                const labels = yearly_data.map(item => item.Year);
+                const totalJobsData = yearly_data.map(item => item.total_jobs);
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Total Jobs',
+                            data: totalJobsData,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Year'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Number of Jobs'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                window.sortTable = function(columnIndex) {
+                    const table = document.getElementById('mainTable');
+                    const rowsArray = Array.from(table.rows).slice(1);
+                    const isAscending = table.rows[0].cells[columnIndex].classList.toggle('sort-asc');
+
+                    rowsArray.sort((rowA, rowB) => {
+                        const cellA = rowA.cells[columnIndex].textContent.trim();
+                        const cellB = rowB.cells[columnIndex].textContent.trim();
+                        const compare = isNaN(cellA) || isNaN(cellB)
+                            ? cellA.localeCompare(cellB)
+                            : parseFloat(cellA) - parseFloat(cellB);
+                        return isAscending ? compare : -compare;
+                    });
+
+                    rowsArray.forEach(row => table.tBodies[0].appendChild(row));
+
+                    Array.from(table.rows[0].cells).forEach((cell, idx) => {
+                        if (idx !== columnIndex) cell.classList.remove('sort-asc', 'sort-desc');
+                    });
+                    table.rows[0].cells[columnIndex].classList.toggle('sort-desc', !isAscending);
+                };
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    });
+</script>
+
+</body>
+</html>
