@@ -1,3 +1,5 @@
+Hosted link 🔗 :- https://my-mlproject.onrender.com
+
 **ML and Data Analytics Project**
 --------------------------------------
 **Task 1: Basic Table**
